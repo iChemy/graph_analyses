@@ -9,16 +9,16 @@ fn main() {
     let _ = g.add_node(0);
     let _ = g.add_node(1);
     let _ = g.add_node(4);
-    let _ = g.add_edge(0, 1);
-    let _ = g.add_edge(1, 2);
-    let _ = g.add_edge(2, 0); // サイクル1: 0 → 1 → 2 → 0
-    let _ = g.add_edge(3, 4);
-    let _ = g.add_edge(4, 3); // サイクル2: 3 → 4 → 3
+    let _ = g.add_edge(&0, &1);
+    let _ = g.add_edge(&1, &2);
+    let _ = g.add_edge(&2, &0); // サイクル1: 0 → 1 → 2 → 0
+    let _ = g.add_edge(&3, &4);
+    let _ = g.add_edge(&4, &3); // サイクル2: 3 → 4 → 3
 
     let cycle = g.detect_cycle().unwrap();
 
     for c in cycle {
-        let u = *g.get_node(c).unwrap();
+        let u = *g.get_node(&c).unwrap();
         println!("{}", u);
     }
 }
