@@ -1,4 +1,8 @@
-use std::{collections::{HashMap, HashSet}, fmt::Debug, hash::Hash};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Debug,
+    hash::Hash,
+};
 
 type NodeID = usize;
 
@@ -30,7 +34,7 @@ impl Node {
     }
 }
 
-impl <T:  PartialEq + Eq + Hash + Debug> Graph<T> {
+impl<T: PartialEq + Eq + Hash + Debug> Graph<T> {
     pub fn new() -> Self {
         Self {
             id_counter: 0,
@@ -38,7 +42,6 @@ impl <T:  PartialEq + Eq + Hash + Debug> Graph<T> {
             nodes_dict: HashMap::new(),
         }
     }
-
 
     // 使用するノードを登録する
     pub fn add_node(&mut self, u: T) -> Result<(), String> {
@@ -232,11 +235,11 @@ mod tests {
         let _ = g.add_node(2);
         let _ = g.add_node(3);
         let _ = g.add_node(4);
-        let _ = g.add_edge(&0,&1);
-        let _ = g.add_edge(&1,&2);
-        let _ = g.add_edge(&2,&0); // サイクル1: 0 → 1 → 2 → 0
-        let _ = g.add_edge(&3,&4);
-        let _ = g.add_edge(&4,&3); // サイクル2: 3 → 4 → 3
+        let _ = g.add_edge(&0, &1);
+        let _ = g.add_edge(&1, &2);
+        let _ = g.add_edge(&2, &0); // サイクル1: 0 → 1 → 2 → 0
+        let _ = g.add_edge(&3, &4);
+        let _ = g.add_edge(&4, &3); // サイクル2: 3 → 4 → 3
 
         let cycle = g.detect_cycle().unwrap();
         println!("{:#?}", cycle);
