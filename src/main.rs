@@ -1,5 +1,6 @@
 use usize_graph::graph::Graph;
 
+mod graph;
 mod usize_graph;
 
 fn main() {
