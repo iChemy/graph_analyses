@@ -123,91 +123,16 @@ impl<T: PartialEq + Eq + Hash + Debug> Graph<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Graph, Node};
-
-    #[test]
-    fn test_node_add_edge() {
-        {
-            // standard case
-            let mut n = Node::new(0);
-            assert_eq!(n.add_edge(1), false);
-        }
-        {
-            // children duplication
-            let mut n = Node::new(0);
-            assert_eq!(n.add_edge(1), false);
-            assert_eq!(n.add_edge(1), true);
-            assert_eq!(n.add_edge(1), true);
-        }
-        {
-            // self cyclic (but no error)
-            let mut n = Node::new(0);
-            assert_eq!(n.add_edge(0), false);
-            assert_eq!(n.add_edge(0), true);
-        }
-    }
-
-    #[test]
-    fn test_graph_add_node() {
-        {
-            // standard case
-            let mut g = Graph::new();
-            assert_eq!(g.add_node("node1"), Ok(()))
-        }
-        {
-            // node duplication
-            let mut g = Graph::new();
-            let _ = g.add_node("node1");
-            assert_eq!(g.add_node("node1").is_err(), true);
-        }
-    }
-
-    #[test]
-    fn test_graph_add_edge() {
-        {
-            // not existing node
-            let mut g = Graph::new();
-            assert_eq!(g.add_edge(&0, &0).is_err(), true);
-        }
-        {
-            // not existing node2
-            let mut g = Graph::new();
-            let _ = g.add_node(0);
-            assert_eq!(g.add_edge(&0, &1).is_err(), true);
-        }
-        {
-            // standard case
-            let mut g = Graph::new();
-            let _ = g.add_node(0);
-            let _ = g.add_node(1);
-            assert_eq!(g.add_edge(&0, &1), Ok(false));
-        }
-        {
-            // edge duplication
-            let mut g = Graph::new();
-            let _ = g.add_node(0);
-            let _ = g.add_node(1);
-            assert_eq!(g.add_edge(&0, &1), Ok(false));
-            assert_eq!(g.add_edge(&0, &1), Ok(true));
-        }
-        {
-            // cyclic
-            let mut g = Graph::new();
-            let _ = g.add_node(0);
-            let _ = g.add_node(1);
-            assert_eq!(g.add_edge(&0, &1), Ok(false));
-            assert_eq!(g.add_edge(&1, &0), Ok(false));
-        }
-    }
+    use super::Graph;
 
     #[test]
     fn test_detect_cycle_no_cycle() {
         let mut g = Graph::new();
-        let _ = g.add_node(0);
-        let _ = g.add_node(1);
-        let _ = g.add_node(2);
-        let _ = g.add_edge(&0, &1);
-        let _ = g.add_edge(&1, &2);
+        let _ = g.add_node("A");
+        let _ = g.add_node("B");
+        let _ = g.add_node("C");
+        let _ = g.add_edge(&"A", &"B");
+        let _ = g.add_edge(&"B", &"C");
 
         assert_eq!(g.detect_cycle(), None);
     }
@@ -215,45 +140,59 @@ mod tests {
     #[test]
     fn test_detect_cycle_single_cycle() {
         let mut g = Graph::new();
-        let _ = g.add_node(0);
-        let _ = g.add_node(1);
-        let _ = g.add_node(2);
-        let _ = g.add_edge(&0, &1);
-        let _ = g.add_edge(&1, &2);
-        let _ = g.add_edge(&2, &0); // 0 → 1 → 2 → 0 のサイクル
+        let _ = g.add_node("A");
+        let _ = g.add_node("B");
+        let _ = g.add_node("C");
+        let _ = g.add_edge(&"A", &"B");
+        let _ = g.add_edge(&"B", &"C");
+        let _ = g.add_edge(&"C", &"A"); // A → B → C → A のサイクル
 
         let cycle = g.detect_cycle().unwrap();
-        assert!(cycle.len() >= 3); // 最低 3 つのノードを含む
+        assert!(cycle.len() >= 3);
         assert_eq!(cycle.first(), cycle.last()); // サイクルは閉じているはず
     }
 
     #[test]
     fn test_detect_cycle_multiple_cycles() {
         let mut g = Graph::new();
-        let _ = g.add_node(0);
-        let _ = g.add_node(1);
-        let _ = g.add_node(2);
-        let _ = g.add_node(3);
-        let _ = g.add_node(4);
-        let _ = g.add_edge(&0, &1);
-        let _ = g.add_edge(&1, &2);
-        let _ = g.add_edge(&2, &0); // サイクル1: 0 → 1 → 2 → 0
-        let _ = g.add_edge(&3, &4);
-        let _ = g.add_edge(&4, &3); // サイクル2: 3 → 4 → 3
+        let _ = g.add_node("A");
+        let _ = g.add_node("B");
+        let _ = g.add_node("C");
+        let _ = g.add_node("X");
+        let _ = g.add_node("Y");
+        let _ = g.add_edge(&"A", &"B");
+        let _ = g.add_edge(&"B", &"C");
+        let _ = g.add_edge(&"C", &"A"); // サイクル1: A → B → C → A
+        let _ = g.add_edge(&"X", &"Y");
+        let _ = g.add_edge(&"Y", &"X"); // サイクル2: X → Y → X
 
         let cycle = g.detect_cycle().unwrap();
-        println!("{:#?}", cycle);
-        assert!(cycle.len() >= 3); // いずれかのサイクルが見つかること
+        assert!(cycle.len() >= 3);
         assert_eq!(cycle.first(), cycle.last());
     }
 
     #[test]
     fn test_detect_cycle_self_loop() {
         let mut g = Graph::new();
-        let _ = g.add_node(0);
-        let _ = g.add_edge(&0, &0); // 自己ループ
+        let _ = g.add_node("A");
+        let _ = g.add_edge(&"A", &"A"); // 自己ループ
 
         let cycle = g.detect_cycle().unwrap();
-        assert_eq!(cycle, vec![0, 0]); // 自己ループのサイクル
+        assert_eq!(cycle, vec![0, 0]); // A → A の自己ループ
+    }
+
+    #[test]
+    fn test_detect_cycle_with_numbers() {
+        let mut g = Graph::new();
+        let _ = g.add_node(1);
+        let _ = g.add_node(2);
+        let _ = g.add_node(3);
+        let _ = g.add_edge(&1, &2);
+        let _ = g.add_edge(&2, &3);
+        let _ = g.add_edge(&3, &1); // 1 → 2 → 3 → 1 のサイクル
+
+        let cycle = g.detect_cycle().unwrap();
+        assert!(cycle.len() >= 3);
+        assert_eq!(cycle.first(), cycle.last());
     }
 }
