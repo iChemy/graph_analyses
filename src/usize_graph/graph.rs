@@ -40,7 +40,18 @@ impl Graph {
     }
 
     pub fn get_node(&self, id: &NodeID) -> Option<&usize> {
-        return self.usize_id_dict.get(&id);
+        let mut ret: Option<&usize> = None;
+        for (k, v) in self.usize_id_dict.iter() {
+            if v == id {
+                if ret.is_none() {
+                    ret = Some(k);
+                } else {
+                    panic!("NodeID duplication")
+                }
+            }
+        }
+
+        ret
     }
 
     // 使用するノードを登録する
