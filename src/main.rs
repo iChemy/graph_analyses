@@ -1,6 +1,7 @@
 use usize_graph::graph::Graph;
 
 mod usize_graph;
+mod graph;
 
 fn main() {
     let mut g = Graph::new();
