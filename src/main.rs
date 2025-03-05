@@ -1,25 +1,47 @@
-use usize_graph::graph::Graph;
+use graph::graph::Graph;
+use usize_graph::graph::UsizeGraph;
 
 mod graph;
 mod usize_graph;
 
 fn main() {
-    let mut g = Graph::new();
-    let _ = g.add_node(2);
-    let _ = g.add_node(3);
-    let _ = g.add_node(0);
-    let _ = g.add_node(1);
-    let _ = g.add_node(4);
-    let _ = g.add_edge(&0, &1);
-    let _ = g.add_edge(&1, &2);
-    let _ = g.add_edge(&2, &0); // サイクル1: 0 → 1 → 2 → 0
-    let _ = g.add_edge(&3, &4);
-    let _ = g.add_edge(&4, &3); // サイクル2: 3 → 4 → 3
+    {
+        let mut g = UsizeGraph::new();
+        let _ = g.add_node(2);
+        let _ = g.add_node(3);
+        let _ = g.add_node(0);
+        let _ = g.add_node(1);
+        let _ = g.add_node(4);
+        let _ = g.add_edge(&0, &1);
+        let _ = g.add_edge(&1, &2);
+        let _ = g.add_edge(&2, &0); // サイクル1: 0 → 1 → 2 → 0
+        let _ = g.add_edge(&3, &4);
+        let _ = g.add_edge(&4, &3); // サイクル2: 3 → 4 → 3
 
-    let cycle = g.detect_cycle().unwrap();
+        let cycle = g.detect_cycle().unwrap();
 
-    for c in cycle {
-        let u = *g.get_node(&c).unwrap();
-        println!("{}", u);
+        for c in cycle {
+            let u = *g.get_node_by_id(&c).unwrap();
+            println!("{}", u);
+        }
+    }
+
+    {
+        let mut g = Graph::<&str>::new();
+        let node1 = "ndoe1";
+        let node2 = "node2";
+
+        let _ = g.add_node(&node1);
+        let _ = g.add_node(&node2);
+
+        let _ = g.add_edge(&node1, &node2);
+        let _ = g.add_edge(&node2, &node1);
+
+        let cycle = g.detect_cycle().unwrap();
+
+        for c in cycle {
+            let u = *g.get_node_by_id(&c).unwrap();
+            println!("{}", u);
+        }
     }
 }

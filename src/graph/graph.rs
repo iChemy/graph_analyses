@@ -1,37 +1,11 @@
-use std::{
-    collections::{HashMap, HashSet},
-    fmt::Debug,
-    hash::Hash,
-};
+use std::{collections::HashMap, fmt::Debug, hash::Hash};
 
-type NodeID = usize;
+use super::core::{GraphCore, NodeID};
 
 pub struct Graph<T: PartialEq + Eq + Hash + Debug> {
     id_counter: usize,
     id_dict: HashMap<T, NodeID>,
-    nodes_dict: HashMap<NodeID, Node>,
-}
-
-struct Node {
-    id: NodeID,
-    children: Vec<NodeID>,
-}
-
-impl Node {
-    fn new(id: NodeID) -> Self {
-        Self {
-            id,
-            children: Vec::new(),
-        }
-    }
-
-    fn add_edge(&mut self, id: NodeID) -> bool {
-        let ret = self.children.contains(&id);
-
-        self.children.push(id);
-
-        ret
-    }
+    core: GraphCore,
 }
 
 impl<T: PartialEq + Eq + Hash + Debug> Graph<T> {
@@ -39,8 +13,22 @@ impl<T: PartialEq + Eq + Hash + Debug> Graph<T> {
         Self {
             id_counter: 0,
             id_dict: HashMap::new(),
-            nodes_dict: HashMap::new(),
+            core: GraphCore::new(),
         }
+    }
+
+    pub fn get_node_by_id(&self, id: &NodeID) -> Option<&T> {
+        let mut ret: Option<&T> = None;
+        for (k, v) in self.id_dict.iter() {
+            if v == id {
+                if ret.is_none() {
+                    ret = Some(k);
+                } else {
+                    panic!("NodeID duplication")
+                }
+            }
+        }
+        ret
     }
 
     // 使用するノードを登録する
@@ -52,9 +40,8 @@ impl<T: PartialEq + Eq + Hash + Debug> Graph<T> {
         let new_id = self.id_counter;
         self.id_counter += 1;
         self.id_dict.insert(u, new_id);
-        self.nodes_dict.insert(new_id, Node::new(new_id));
 
-        Ok(())
+        self.core.add_node(new_id)
     }
 
     // すでにエッジが登録されている場合 false が返される (ただし，複数のエッジとして登録はされる)
@@ -68,62 +55,32 @@ impl<T: PartialEq + Eq + Hash + Debug> Graph<T> {
             .get(&u_to)
             .ok_or(format!("node {:#?} is not added", u_to))?;
 
-        let node = self.nodes_dict.get_mut(&from_id).unwrap(); // add_node メソッドを介してしか追加されずその際に Node は作られている
-        return Ok(node.add_edge(to_id));
-    }
-
-    fn has_cycle_dfs(
-        &self,
-        node: NodeID,
-        visited: &mut HashSet<NodeID>,
-        rec_stack: &mut Vec<NodeID>,
-        cycle: &mut Vec<NodeID>,
-    ) -> bool {
-        if let Some(pos) = rec_stack.iter().position(|&x| x == node) {
-            // サイクル発見: `rec_stack` からサイクル部分を取り出す
-            *cycle = rec_stack[pos..].to_vec();
-            cycle.push(node);
-            return true;
-        }
-
-        if visited.contains(&node) {
-            return false;
-        }
-
-        visited.insert(node);
-        rec_stack.push(node);
-
-        if let Some(n) = self.nodes_dict.get(&node) {
-            for &neighbor in &n.children {
-                if self.has_cycle_dfs(neighbor, visited, rec_stack, cycle) {
-                    return true;
-                }
-            }
-        }
-
-        rec_stack.pop(); // 探索が終わったら戻す
-        false
+        return self.core.add_edge(from_id, to_id);
     }
 
     pub fn detect_cycle(&self) -> Option<Vec<NodeID>> {
-        let mut visited = HashSet::new();
-        let mut rec_stack = Vec::new();
-        let mut cycle = Vec::new();
-
-        for &node in self.nodes_dict.keys() {
-            if !visited.contains(&node) {
-                if self.has_cycle_dfs(node, &mut visited, &mut rec_stack, &mut cycle) {
-                    return Some(cycle);
-                }
-            }
-        }
-        None
+        self.core.detect_cycle()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::Graph;
+
+    #[test]
+    fn test_graph_add_node() {
+        {
+            // standard case
+            let mut g = Graph::new();
+            assert_eq!(g.add_node(0), Ok(()))
+        }
+        {
+            // node duplication
+            let mut g = Graph::new();
+            let _ = g.add_node(0);
+            assert_eq!(g.add_node(0).is_err(), true);
+        }
+    }
 
     #[test]
     fn test_detect_cycle_no_cycle() {
