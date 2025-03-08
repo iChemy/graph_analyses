@@ -40,8 +40,7 @@ fn main() {
         let cycle = g.detect_cycle().unwrap();
 
         for c in cycle {
-            let u = *g.get_node_by_id(&c).unwrap();
-            println!("{}", u);
+            println!("{}", c);
         }
     }
 }

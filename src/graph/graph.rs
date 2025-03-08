@@ -58,8 +58,21 @@ impl<T: PartialEq + Eq + Hash + Debug> Graph<T> {
         return self.core.add_edge(from_id, to_id);
     }
 
-    pub fn detect_cycle(&self) -> Option<Vec<NodeID>> {
-        self.core.detect_cycle()
+    pub fn detect_cycle(&self) -> Option<Vec<&T>> {
+        let inner_ret = self.core.detect_cycle();
+
+        match inner_ret {
+            Some(v) => {
+                let mut ret = Vec::<&T>::new();
+
+                for i in v.iter() {
+                    ret.push(self.get_node_by_id(i).unwrap())
+                }
+
+                Some(ret)
+            }
+            None => None,
+        }
     }
 }
 
@@ -135,7 +148,7 @@ mod tests {
         let _ = g.add_edge(&"A", &"A"); // 自己ループ
 
         let cycle = g.detect_cycle().unwrap();
-        assert_eq!(cycle, vec![0, 0]); // A → A の自己ループ
+        assert_eq!(cycle, vec![&"A", &"A"]); // A → A の自己ループ
     }
 
     #[test]
