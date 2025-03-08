@@ -43,4 +43,22 @@ fn main() {
             println!("{}", c);
         }
     }
+
+    {
+        let mut graph = Graph::new();
+        let node_a = "A";
+        let node_b = "B";
+        let node_c = "C";
+
+        let _ = graph.add_node(node_a);
+        let _ = graph.add_node(node_b);
+        let _ = graph.add_node(node_c);
+
+        let _ = graph.add_edge(&node_a, &node_b);
+        let _ = graph.add_edge(&node_a, &node_c);
+
+        graph.traverse(&"A", |node| {
+            println!("Visited node: {}", node);
+        });
+    }
 }

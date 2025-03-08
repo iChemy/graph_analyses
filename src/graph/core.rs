@@ -3,26 +3,26 @@ use std::collections::{HashMap, HashSet};
 pub type NodeID = usize;
 
 pub struct GraphCore {
-    nodes_dict: HashMap<NodeID, Node>,
+    pub nodes_dict: HashMap<NodeID, Node>,
 }
 
-struct Node {
+pub struct Node {
     id: NodeID,
-    children: Vec<NodeID>,
+    pub children: HashSet<NodeID>,
 }
 
 impl Node {
     fn new(id: NodeID) -> Self {
         Self {
             id,
-            children: Vec::new(),
+            children: HashSet::new(),
         }
     }
 
     fn add_edge(&mut self, id: NodeID) -> bool {
         let ret = self.children.contains(&id);
 
-        self.children.push(id);
+        self.children.insert(id);
 
         ret
     }
@@ -97,6 +97,31 @@ impl GraphCore {
             }
         }
         None
+    }
+
+    /// グラフの探索を行い、各ノードで `visit` 関数を実行する
+    pub fn traverse<F>(&self, start: NodeID, mut visit: F)
+    where
+        F: FnMut(NodeID),
+    {
+        let mut visited = std::collections::HashSet::new();
+        let mut stack = vec![start];
+
+        while let Some(node) = stack.pop() {
+            if visited.contains(&node) {
+                continue;
+            }
+            visited.insert(node);
+
+            // 渡された関数を実行
+            visit(node);
+
+            if let Some(n) = self.nodes_dict.get(&node) {
+                for &neighbor in &n.children {
+                    stack.push(neighbor);
+                }
+            }
+        }
     }
 }
 

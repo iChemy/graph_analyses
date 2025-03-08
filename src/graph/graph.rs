@@ -1,4 +1,8 @@
-use std::{collections::HashMap, fmt::Debug, hash::Hash};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Debug,
+    hash::Hash,
+};
 
 use super::core::{GraphCore, NodeID};
 
@@ -72,6 +76,36 @@ impl<T: PartialEq + Eq + Hash + Debug> Graph<T> {
                 Some(ret)
             }
             None => None,
+        }
+    }
+
+    pub fn traverse<F>(&self, start: &T, mut f: F)
+    where
+        F: FnMut(&T),
+    {
+        if let Some(&start_id) = self.id_dict.get(start) {
+            let mut visited = HashSet::new();
+            self.traverse_recursive(start_id, &mut visited, &mut f);
+        }
+    }
+
+    fn traverse_recursive<F>(&self, node_id: NodeID, visited: &mut HashSet<NodeID>, f: &mut F)
+    where
+        F: FnMut(&T),
+    {
+        if visited.contains(&node_id) {
+            return;
+        }
+        visited.insert(node_id);
+
+        if let Some(node_value) = self.get_node_by_id(&node_id) {
+            f(node_value);
+        }
+
+        if let Some(node) = self.core.nodes_dict.get(&node_id) {
+            for &child_id in &node.children {
+                self.traverse_recursive(child_id, visited, f);
+            }
         }
     }
 }
